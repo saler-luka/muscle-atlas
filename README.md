@@ -4,4 +4,4 @@ Clickable front and back body map. Pick a muscle group to see what it does and h
 
 Live: https://saler-luka.github.io/muscle-atlas/
 
-Single static `index.html`, no build step. Deep links per muscle, e.g. `#glutes`.
+Static site, no build step: `index.html` + data files (`data-en.js`, `data-extra.js`, `data-hr.js`). English and Croatian (EN/HR switch). Deep links per muscle, e.g. `#glutes`.
