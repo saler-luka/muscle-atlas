@@ -26,6 +26,21 @@ const TPL = {
  legs:["quads","hamstrings","glutes","quads","calves","adductors","lowerAbs","obliques"]
 };
 TPL.push2 = TPL.push; TPL.pull2 = TPL.pull; TPL.legs2 = TPL.legs;
+// One-or-two-muscle-groups-per-day ("bro") split; short days are padded with core work only
+const BRO = {
+ chestTri:["chest","chest","triceps","chest","triceps","chest","triceps","upperAbs"],
+ backBi:["lats","lats","traps","biceps","lats","biceps","lowerBack","forearms"],
+ legsSho:["quads","hamstrings","delts","glutes","delts","calves","quads","delts"],
+ legsBro:["quads","hamstrings","glutes","quads","calves","adductors","hamstrings","calves"],
+ shoAbs:["delts","delts","traps","delts","upperAbs","lowerAbs","obliques","delts"],
+ chestOnly:["chest","chest","chest","chest","chest","chest","upperAbs","obliques"],
+ backOnly:["lats","lats","traps","lats","lowerBack","lats","traps","lowerBack"],
+ shoOnly:["delts","delts","traps","delts","delts","traps","upperAbs","obliques"],
+ arms:["biceps","triceps","biceps","triceps","forearms","biceps","triceps","forearms"],
+ legsB:["glutes","hamstrings","quads","glutes","calves","adductors","lowerAbs","obliques"]
+};
+Object.assign(TPL, BRO);
+const BRO_PAD = ["upperAbs","obliques","lowerAbs"];
 const WEEKDAYS = {2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,4,5],6:[0,1,2,3,4,5]};
 const RX = {strength:[["4 × 4–6","2–3 min"],["3 × 8–10","90 s"]], muscle:[["4 × 6–10","2 min"],["3 × 10–15","60–90 s"]],
  fat:[["3 × 10–12","60 s"],["3 × 12–15","45 s"]], health:[["3 × 8–12","90 s"],["2 × 12–15","60 s"]], endurance:[["3 × 15–20","45 s"],["2–3 × 15–20","30 s"]]};
@@ -42,6 +57,7 @@ en:{
   exp:{t:"How much have you trained before?",o:{beg:["Beginner","Never, or less than 6 months"],int:["Intermediate","6 months to 2 years of regular training"],adv:["Advanced","Over 2 years, comfortable with barbell lifts"]}},
   where:{t:"Where will you work out?",o:{body:["At home, bodyweight only","No equipment. A pull-up bar helps a lot."],home:["At home with basic equipment","Dumbbells, kettlebell, resistance bands, a bench"],gym:["In a gym","Machines, cables, barbells and everything else"]}},
   days:{t:"How many days a week can you train?",o:{2:["2 days","The minimum for steady progress"],3:["3 days","The most popular choice"],4:["4 days","Upper and lower body split"],5:["5 days","More volume, needs good recovery"],6:["6 days","For experienced lifters"]}},
+  style:{t:"How do you want your week organised?",o:{auto:["Recommended for my goal","Each muscle trained about twice a week. Slightly better results for most people."],bro:["One or two muscle groups per day","Classic gym split: chest & triceps, back & biceps, legs, shoulders."]}},
   len:{t:"How long can each session be?",o:{30:["30 min","About 4 exercises"],45:["45 min","About 5 exercises"],60:["60 min","About 6 exercises"],90:["90 min","About 8 exercises"]}},
   lim:{t:"Any areas you need to protect?",s:"We'll leave out the riskiest exercises for these. This doesn't replace advice from a doctor or physiotherapist.",o:{none:["No problems",""],knee:["Knees",""],back:["Lower back",""],shoulder:["Shoulders",""]}}
  },
@@ -51,7 +67,7 @@ en:{
  protein:"Protein", protS:"grams per day, spread over 3–5 meals",
  cardio:"Cardio", cardioT:{fat:"2–3 × 20–40 min brisk walking or cycling, plus 7–10k steps a day",muscle:"1–2 × 20–30 min easy cardio for heart health",strength:"1–2 × 20–30 min easy cardio for heart health",health:"150 min a week of moderate cardio, such as brisk walking",endurance:"3 × 30–45 min easy cardio plus 1 interval session"},
  week:"Your week", rest:"Rest", day:i=>`Day ${i}`, wdShort:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], wdLong:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
- titles:{fbA:"Full body A",fbB:"Full body B",fbC:"Full body C",upA:"Upper A",upB:"Upper B",loA:"Lower A",loB:"Lower B",push:"Push",pull:"Pull",legs:"Legs",push2:"Push B",pull2:"Pull B",legs2:"Legs B"},
+ titles:{fbA:"Full body A",fbB:"Full body B",fbC:"Full body C",upA:"Upper A",upB:"Upper B",loA:"Lower A",loB:"Lower B",push:"Push",pull:"Pull",legs:"Legs",push2:"Push B",pull2:"Pull B",legs2:"Legs B",chestTri:"Chest & triceps",backBi:"Back & biceps",legsSho:"Legs & shoulders",legsBro:"Legs",shoAbs:"Shoulders & abs",chestOnly:"Chest",backOnly:"Back",shoOnly:"Shoulders",arms:"Arms",legsB:"Legs B"},
  rest_:"rest", openHint:"Tap an exercise for step-by-step technique.",
  tipsT:"How to run this plan",
  tips:{warm:"Warm up for 5–10 minutes with light cardio, then do 1–2 lighter sets of your first exercise.",
@@ -59,6 +75,8 @@ en:{
   body:"With bodyweight exercises, move to a harder variation (feet raised, slower tempo, one leg) when you can beat the rep range.",
   beg:"For the first 2 weeks, do one set fewer than listed while you learn the movements.",
   deload:"Every 6–8 weeks, take an easier week with about half the sets.",
+  bro:"Each muscle gets one hard session a week, so push your last sets close to failure. If progress stalls, try the recommended split.",
+  bro2:"With 2 days a week, one muscle group per day would leave most muscles untrained, so you get an upper/lower split instead.",
   amrap:"“max −2” means as many clean reps as you can, stopping about 2 reps before failure.",
   sleep:"Aim for 7–9 hours of sleep. Muscles grow during recovery, not during the workout.",
   old:"After 60, keep balance and leg strength a priority and check with your doctor before starting hard training.",
@@ -77,6 +95,7 @@ hr:{
   exp:{t:"Koliko si do sada trenirao/la?",o:{beg:["Početnik","Nikad ili manje od 6 mjeseci"],int:["Srednja razina","6 mjeseci do 2 godine redovitog treninga"],adv:["Napredno","Više od 2 godine, sigurno radiš sa šipkom"]}},
   where:{t:"Gdje ćeš trenirati?",o:{body:["Kod kuće, samo vlastita težina","Bez opreme. Šipka za zgibove puno pomaže."],home:["Kod kuće s osnovnom opremom","Bučice, kettlebell, elastične gume, klupa"],gym:["U teretani","Sprave, sajle, šipke i sve ostalo"]}},
   days:{t:"Koliko dana tjedno možeš trenirati?",o:{2:["2 dana","Minimum za stalan napredak"],3:["3 dana","Najčešći izbor"],4:["4 dana","Podjela na gornji i donji dio tijela"],5:["5 dana","Više volumena, treba dobar oporavak"],6:["6 dana","Za iskusne vježbače"]}},
+  style:{t:"Kako želiš organizirati tjedan?",o:{auto:["Preporučeno za moj cilj","Svaki mišić otprilike dvaput tjedno. Malo bolji rezultati za većinu ljudi."],bro:["Jedna ili dvije mišićne skupine dnevno","Klasična podjela: prsa i triceps, leđa i biceps, noge, ramena."]}},
   len:{t:"Koliko dugo može trajati trening?",o:{30:["30 min","Oko 4 vježbe"],45:["45 min","Oko 5 vježbi"],60:["60 min","Oko 6 vježbi"],90:["90 min","Oko 8 vježbi"]}},
   lim:{t:"Trebaš li paziti na neki dio tijela?",s:"Izostavit ćemo najrizičnije vježbe za te dijelove. Ovo ne zamjenjuje savjet liječnika ili fizioterapeuta.",o:{none:["Nemam problema",""],knee:["Koljena",""],back:["Donja leđa",""],shoulder:["Ramena",""]}}
  },
@@ -86,7 +105,7 @@ hr:{
  protein:"Proteini", protS:"grama dnevno, raspoređeno na 3–5 obroka",
  cardio:"Kardio", cardioT:{fat:"2–3 × 20–40 min žustrog hodanja ili bicikla, uz 7–10 tisuća koraka dnevno",muscle:"1–2 × 20–30 min laganog kardija za zdravlje srca",strength:"1–2 × 20–30 min laganog kardija za zdravlje srca",health:"150 min tjedno umjerenog kardija, npr. žustrog hodanja",endurance:"3 × 30–45 min laganog kardija i 1 intervalni trening"},
  week:"Tvoj tjedan", rest:"Odmor", day:i=>`Dan ${i}`, wdShort:["Pon","Uto","Sri","Čet","Pet","Sub","Ned"], wdLong:["Ponedjeljak","Utorak","Srijeda","Četvrtak","Petak","Subota","Nedjelja"],
- titles:{fbA:"Cijelo tijelo A",fbB:"Cijelo tijelo B",fbC:"Cijelo tijelo C",upA:"Gornji dio A",upB:"Gornji dio B",loA:"Donji dio A",loB:"Donji dio B",push:"Guranje",pull:"Povlačenje",legs:"Noge",push2:"Guranje B",pull2:"Povlačenje B",legs2:"Noge B"},
+ titles:{fbA:"Cijelo tijelo A",fbB:"Cijelo tijelo B",fbC:"Cijelo tijelo C",upA:"Gornji dio A",upB:"Gornji dio B",loA:"Donji dio A",loB:"Donji dio B",push:"Guranje",pull:"Povlačenje",legs:"Noge",push2:"Guranje B",pull2:"Povlačenje B",legs2:"Noge B",chestTri:"Prsa i triceps",backBi:"Leđa i biceps",legsSho:"Noge i ramena",legsBro:"Noge",shoAbs:"Ramena i trbuh",chestOnly:"Prsa",backOnly:"Leđa",shoOnly:"Ramena",arms:"Ruke",legsB:"Noge B"},
  rest_:"odmor", openHint:"Dodirni vježbu za tehniku korak po korak.",
  tipsT:"Kako provoditi plan",
  tips:{warm:"Zagrij se 5–10 minuta laganim kardijem, zatim napravi 1–2 lakše serije prve vježbe.",
@@ -94,6 +113,8 @@ hr:{
   body:"Kod vježbi s vlastitom težinom prijeđi na težu varijantu (podignuta stopala, sporiji tempo, jedna noga) kad nadmašiš raspon ponavljanja.",
   beg:"Prva 2 tjedna radi jednu seriju manje od navedenog dok učiš pokrete.",
   deload:"Svakih 6–8 tjedana napravi lakši tjedan s otprilike pola serija.",
+  bro:"Svaki mišić ima jedan težak trening tjedno, pa zadnje serije odradi blizu otkaza. Ako napredak stane, probaj preporučenu podjelu.",
+  bro2:"Uz 2 dana tjedno, jedna skupina po danu ostavila bi većinu mišića netreniranima, pa dobivaš podjelu na gornji i donji dio tijela.",
   amrap:"„max −2” znači onoliko čistih ponavljanja koliko možeš, stani otprilike 2 prije otkaza.",
   sleep:"Spavaj 7–9 sati. Mišići rastu tijekom oporavka, ne tijekom treninga.",
   old:"Nakon 60. godine prioritet su ravnoteža i snaga nogu, a prije težeg treninga posavjetuj se s liječnikom.",
@@ -102,12 +123,12 @@ hr:{
  disclaimer:"Procjene prema standardnim formulama (Mifflin–St Jeor). Nije medicinski savjet."
 }};
 const PU = () => P_UI[lang];
-const Q_ORDER = ["goal","exp","where","days","len","lim"];
+const Q_ORDER = ["goal","exp","where","days","style","len","lim"];
 const TOTAL = Q_ORDER.length + 1;
 
 let prof = {sex:null, age:"", h:"", w:"", goal:null, exp:null, where:null, days:null, len:null, lim:null};
 let pStep = 0;   // 0 = about you, 1..6 = questions, 7 = result
-try { const s = JSON.parse(localStorage.getItem("ma-plan")); if (s && typeof s === "object") { prof = {...prof, ...s}; if (complete()) pStep = 7; } } catch(e){}
+try { const s = JSON.parse(localStorage.getItem("ma-plan")); if (s && typeof s === "object") { prof = {...prof, ...s}; if (prof.style == null && prof.lim != null) prof.style = "auto"; if (complete()) pStep = TOTAL; } } catch(e){}
 function save(){ try { localStorage.setItem("ma-plan", JSON.stringify(prof)); } catch(e){} }
 function complete(){ return !profErrors().length && Q_ORDER.every(k => prof[k] != null); }
 function profErrors(){
@@ -122,6 +143,9 @@ function profErrors(){
 // ---------- Plan logic ----------
 function splitFor(p){
   const d = +p.days;
+  if (p.style === "bro" && d >= 3) return {3:["chestTri","backBi","legsSho"], 4:["chestTri","backBi","legsBro","shoAbs"],
+    5:["chestOnly","backOnly","legsBro","shoOnly","arms"], 6:["chestTri","backBi","legsBro","shoAbs","arms","legsB"]}[d];
+  if (p.style === "bro") return ["upA","loA"];
   if (d === 2) return ["fbA","fbB"];
   if (d === 3) return (p.exp === "beg" || ["fat","health","endurance"].includes(p.goal)) ? ["fbA","fbB","fbC"] : ["push","pull","legs"];
   if (d === 4) return ["upA","loA","upB","loB"];
@@ -147,7 +171,7 @@ function buildPlan(p){
   const usedPlan = new Map();
   return splitFor(p).map((key,i) => {
     const usedDay = new Set(), items = [];
-    for (const gid of [...TPL[key], ...PAD]){
+    for (const gid of [...TPL[key], ...(BRO[key] ? BRO_PAD : PAD)]){
       if (items.length >= n) break;
       const x = pick(gid, {tier, maxLvl, avoid, usedDay, usedPlan, main: items.length < 2});
       if (!x) continue;
@@ -213,7 +237,7 @@ function renderQ(i){
 }
 function renderResult(){
   const u = PU(), p = prof, plan = buildPlan(p), nu = nutrition(p);
-  const chips = [u.q.goal.o[p.goal][0], u.q.exp.o[p.exp][0], u.q.where.o[p.where][0], u.q.days.o[p.days][0], u.q.len.o[p.len][0]];
+  const chips = [u.q.goal.o[p.goal][0], u.q.exp.o[p.exp][0], u.q.where.o[p.where][0], u.q.days.o[p.days][0], u.q.style.o[p.style][0], u.q.len.o[p.len][0]];
   const week = u.wdShort.map((d,i) => { const day = plan.find(x => x.wd === i);
     return `<div class="wd ${day?"on":"off"}"><b>${d}</b><span>${day ? esc(u.titles[day.key]) : u.rest}</span></div>`; }).join("");
   const days = plan.map((d,i) => `<section class="day">
@@ -223,7 +247,7 @@ function renderResult(){
        <span class="xm">${esc(gT(it.gid).name)} · <span class="lvl-${it.x.lvl}">${U().lvl[it.x.lvl]}</span></span>
        <span class="xrx">${esc(rxFor(it.x, it.main))}</span></li>`).join("")}</ol>
    </section>`).join("");
-  const tips = [u.tips.warm, u.tips.prog, p.where==="body" && u.tips.body, p.exp==="beg" && u.tips.beg, p.exp!=="beg" && u.tips.deload,
+  const tips = [p.style==="bro" && (+p.days===2 ? u.tips.bro2 : u.tips.bro), u.tips.warm, u.tips.prog, p.where==="body" && u.tips.body, p.exp==="beg" && u.tips.beg, p.exp!=="beg" && u.tips.deload,
     (p.goal==="fat"||p.goal==="endurance") && u.tips.fatX, plan.some(d => d.items.some(it => it.x.rx.includes("as many"))) && p.goal!=="strength" && u.tips.amrap, u.tips.sleep, +p.age>=60 && u.tips.old, +p.age<18 && u.tips.young].filter(Boolean);
   return `<div class="res-head"><div><p class="eyebrow">${u[p.sex]} · ${+p.age} · ${+p.h} cm · ${+p.w} kg</p><h2>${u.resT}</h2>
      <div class="chips-row">${chips.map(c=>`<span class="tag">${esc(c)}</span>`).join("")}</div></div>
@@ -241,9 +265,9 @@ function renderResult(){
    <p class="legend">${u.disclaimer}</p>`;
 }
 function renderPlan(){
-  planEl.innerHTML = pStep === 0 ? renderAbout() : pStep === 7 ? renderResult() : renderQ(pStep);
+  planEl.innerHTML = pStep === 0 ? renderAbout() : pStep === TOTAL ? renderResult() : renderQ(pStep);
 }
-function go(s){ pStep = s; renderPlan(); planEl.scrollIntoView({block:"start"}); const f = planEl.querySelector(".opt[aria-pressed=true], .opt, input"); if (f && s>0 && s<7) f.focus({preventScroll:true}); }
+function go(s){ pStep = s; renderPlan(); planEl.scrollIntoView({block:"start"}); const f = planEl.querySelector(".opt[aria-pressed=true], .opt, input"); if (f && s>0 && s<TOTAL) f.focus({preventScroll:true}); }
 
 planEl.addEventListener("input", e => {
   const id = e.target.id; if (id === "p-age") prof.age = e.target.value; if (id === "p-h") prof.h = e.target.value; if (id === "p-w") prof.w = e.target.value;
@@ -273,7 +297,7 @@ planEl.addEventListener("click", e => {
   const act = a.dataset.act;
   if (act === "about-next"){ const errs = profErrors(); document.getElementById("p-err").textContent = errs.join(" "); if (!errs.length){ save(); go(1); } }
   if (act === "back") go(pStep - 1);
-  if (act === "finish"){ save(); go(7); }
+  if (act === "finish"){ save(); go(TOTAL); }
   if (act === "edit") go(0);
   if (act === "restart"){ prof = {sex:null, age:"", h:"", w:"", goal:null, exp:null, where:null, days:null, len:null, lim:null}; try { localStorage.removeItem("ma-plan"); } catch(e){} go(0); }
 });
