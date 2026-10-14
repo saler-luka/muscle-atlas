@@ -1,12 +1,12 @@
 // ---------- Workout plan builder (profile + quiz + generated weekly plan) ----------
 // Equipment tiers: 0 bodyweight (pull-up bar, bench/chair, step, wall allowed) · 1 home basics · 2 gym (everything else)
-const SET_B = new Set(["Push-Up","Pike Push-Up","Diamond Push-Up","Bench Dip","Crunch","Front Plank","Hollow Body Hold","Reverse Crunch","Dead Bug","Lying Leg Raise","Mountain Climber","Side Plank","Bicycle Crunch","Bird Dog","Superman","Glute Bridge","Copenhagen Plank","Side-Lying Hip Adduction","Cossack Squat","Tibialis Raise","Single-Leg Calf Raise","Standing Calf Raise","Walking Lunge","Nordic Hamstring Curl","Pull-Up","Chin-Up","Dead Hang","Hanging Knee Raise","Hanging Leg Raise"]);
+const SET_B = new Set(["Push-Up","Pike Push-Up","Diamond Push-Up","Bench Dip","Crunch","Front Plank","Hollow Body Hold","Reverse Crunch","Dead Bug","Lying Leg Raise","Mountain Climber","Side Plank","Bicycle Crunch","Bird Dog","Superman","Glute Bridge","Copenhagen Plank","Side-Lying Hip Adduction","Cossack Squat","Tibialis Raise","Single-Leg Calf Raise","Standing Calf Raise","Walking Lunge","Nordic Hamstring Curl","Pull-Up","Chin-Up","Dead Hang","Hanging Knee Raise","Hanging Leg Raise","Side-Lying Hip Abduction","Reverse Nordic"]);
 const SET_H = new Set(["Dumbbell Shrug","Farmer's Carry","Prone Y-Raise","Band Pull-Apart","Lateral Raise","Reverse Dumbbell Fly","Seated Dumbbell Shoulder Press","Incline Dumbbell Press","Dumbbell Bench Press","Hammer Curl","Incline Dumbbell Curl","Overhead Dumbbell Extension","Dumbbell Wrist Curl","Reverse Wrist Curl","Stability Ball Crunch","Suitcase Carry","One-Arm Dumbbell Row","Goblet Squat","Bulgarian Split Squat","Step-Up","Kettlebell Swing","Banded Lateral Walk","Sumo Squat","Single-Leg Romanian Deadlift","Stability Ball Leg Curl","Jump Rope","Pallof Press"]);
 const tierOf = n => SET_B.has(n) ? 0 : SET_H.has(n) ? 1 : 2;
 
 // Exercises left out when the user flags an area to protect
 const AVOID = {
- knee:["Bulgarian Split Squat","Walking Lunge","Jump Rope","Cossack Squat","Barbell Back Squat","Front Squat","Leg Extension","Step-Up","Nordic Hamstring Curl","Mountain Climber"],
+ knee:["Reverse Nordic","Bulgarian Split Squat","Walking Lunge","Jump Rope","Cossack Squat","Barbell Back Squat","Front Squat","Leg Extension","Step-Up","Nordic Hamstring Curl","Mountain Climber"],
  back:["Conventional Deadlift","Good Morning","Barbell Back Squat","Front Squat","Rack Pull","Barbell Bent-Over Row","Kettlebell Swing","Romanian Deadlift","Ab Wheel Rollout","Standing Overhead Press","Superman","Reverse Hyperextension","Hanging Leg Raise"],
  shoulder:["Standing Overhead Press","Seated Dumbbell Shoulder Press","Pike Push-Up","Chest Dip","Bench Dip","Skull Crusher","Barbell Bench Press","Pull-Up","Chin-Up","Dead Hang","Hanging Knee Raise","Hanging Leg Raise","Overhead Dumbbell Extension"]
 };
@@ -22,7 +22,7 @@ const TPL = {
  loA:["quads","hamstrings","glutes","quads","calves","upperAbs","adductors","lowerAbs"],
  loB:["glutes","quads","hamstrings","hamstrings","calves","obliques","lowerBack","lowerAbs"],
  push:["chest","delts","chest","triceps","delts","triceps","upperAbs","chest"],
- pull:["lats","lats","traps","biceps","delts","biceps","forearms","lowerBack"],
+ pull:["lats","lats","traps","biceps","traps","biceps","forearms","lowerBack"],
  legs:["quads","hamstrings","glutes","quads","calves","adductors","lowerAbs","obliques"]
 };
 TPL.push2 = TPL.push; TPL.pull2 = TPL.pull; TPL.legs2 = TPL.legs;
@@ -263,7 +263,7 @@ planEl.addEventListener("click", e => {
   }
   const op = e.target.closest("[data-open]");
   if (op){
-    showTab("map"); select(op.dataset.open, false);
+    showTab("map"); select(op.dataset.open, null, false);
     const det = [...document.querySelectorAll("details.ex")].find(d => d.dataset.ex === op.dataset.ex);
     document.querySelectorAll("details.ex").forEach(d => d.open = d === det);
     (det || document.getElementById("sheet")).scrollIntoView({block:"start"});
@@ -284,7 +284,7 @@ function showTab(t){
   planEl.hidden = t !== "plan";
   document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
   if (t === "plan"){ renderPlan(); try { history.replaceState(null,"","#plan"); } catch(e){} }
-  else if (current) { try { history.replaceState(null,"","#"+current); } catch(e){} }
+  else if (current) { try { history.replaceState(null,"","#"+current+(currentPart ? "/"+currentPart : "")); } catch(e){} }
 }
 document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
 function renderTabs(){ const u = PU(); document.getElementById("tab-map").textContent = u.tabMap; document.getElementById("tab-plan").textContent = u.tabPlan; }

@@ -52,6 +52,9 @@ main{display:grid;grid-template-columns:minmax(300px,440px) minmax(0,1fr);gap:24
 .m:hover path,.m.hl path{fill:var(--hov)}
 .m.sel path{fill:var(--sel)}
 .m:focus-visible path{stroke:var(--fg);stroke-width:1.6}
+.m.grp path{stroke:var(--sel);stroke-width:.9}
+.m.deep path{stroke:var(--fg);stroke-opacity:.6;stroke-dasharray:1.6 1.2;stroke-width:.8;fill-opacity:.8}
+.m.deep.sel path,.m.deep:hover path,.m.deep.hl path{fill-opacity:1}
 .hover-read{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;min-height:1.4em;grid-column:1/-1}
 .hover-read b{color:var(--fg);font-weight:500}
 
@@ -89,6 +92,12 @@ summary:focus-visible{outline:2px solid var(--fg);outline-offset:-2px;border-rad
 details[open] .ex-name::before{content:"−"}
 .tags{display:flex;flex-wrap:wrap;gap:6px;grid-column:1/-1;padding-left:1.1em}
 .tag{font-family:var(--mono);font-size:11.5px;padding:3px 8px;border-radius:4px;background:var(--chip);color:var(--fg);white-space:nowrap}
+.tag.t-main{background:var(--sel);color:#fff}
+.tag.t-also{background:none;border:1px solid var(--line);color:var(--muted)}
+.tag.t-part{background:none;border:1px solid var(--line)}
+.parts{display:flex;flex-direction:column;gap:6px}
+.parts .grp-title{margin:0}
+.deep-note{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:6px 0 0}
 .lvl-1{color:var(--good)} .lvl-2{color:var(--warn)} .lvl-3{color:var(--bad)}
 .meter{display:inline-flex;gap:2px;vertical-align:middle;margin-left:4px}
 .meter i{width:5px;height:10px;border-radius:1px;background:var(--line)}
@@ -116,7 +125,6 @@ footer{font-size:12px;color:var(--muted);max-width:80ch}
 .lang button[aria-pressed="true"]{background:var(--fg);color:var(--panel)}
 .lang button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .head-l{display:flex;flex-direction:column;gap:8px}
-
 /* tabs + plan builder */
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
 .tab{font:600 14px/1 var(--body);color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;margin-bottom:-1px;cursor:pointer}
@@ -213,35 +221,70 @@ footer{font-size:12px;color:var(--muted);max-width:80ch}
 <script src="data-en.js"></script>
 <script src="data-extra.js"></script>
 <script src="data-hr.js"></script>
+<script src="data-parts.js"></script>
 <script>
 // ---------- Figure geometry (left half of a 200-wide figure; mirrored at x=100) ----------
 const SIL = "M100,50 L92,50 L91,62 C84,66 70,68 62,71 C52,74 46,84 45,98 C44,112 44,130 44,148 C40,166 34,186 31,210 C28,222 28,234 32,242 C36,246 40,242 40,236 L42,214 C48,192 54,172 58,152 C60,136 62,118 66,106 C68,130 70,160 72,182 C68,196 64,210 64,226 C62,256 64,286 70,310 C68,336 70,364 76,396 C74,404 70,412 72,418 L90,418 C92,410 90,402 88,396 C92,368 94,340 92,316 C96,290 98,256 99,226 L100,224 Z";
-const DELT = "M64,72 C54,72 48,82 47,96 C48,104 52,108 57,108 C60,96 64,86 70,78 Z";
-const FORE = "M45,152 C40,168 36,188 33,208 L41,210 C46,190 52,172 57,152 Z";
+// A group is either one path or {muscleId: path} for the individual muscles in PARTS (data-parts.js).
+const DELT_OUT = "M64,72 C54,72 48,82 47,96 C48,104 52,108 55,107 C54,96 56,82 61,72.5 Z";      // side head
+const DELT_IN  = "M61,72.5 C56,82 54,96 55,107 L57,108 C60,96 64,86 70,78 C68,75 66,73 64,72 Z"; // front head (front) / rear head (back)
+const FORE_OUT = "M45,152 C43,160 41,168 39,176 L45,178 C47,170 50,161 53,152 Z";               // brachioradialis
+const FORE_IN  = "M53,152 C50,161 47,170 45,178 L39,176 C37,186 35,197 33,208 L41,210 C46,190 52,172 57,152 Z";
+const UPPER_TRAP_FRONT = "M92,58 C88,64 80,68 66,72 C76,73 86,72 94,68 Z";
 const SHAPES = {
   front:{
-    traps:"M92,58 C88,64 80,68 66,72 C76,73 86,72 94,68 Z",
-    delts:DELT,
-    chest:"M99,76 L72,76 C66,82 64,94 65,106 C72,116 86,120 99,116 Z",
-    biceps:"M48,108 C45,120 45,138 49,148 C53,150 58,148 60,140 C62,128 61,116 58,108 Z",
-    forearms:FORE,
+    traps:{upper:UPPER_TRAP_FRONT},
+    delts:{side:DELT_OUT, front:DELT_IN},
+    chest:{
+      upper:"M99,76 L72,76 C69,79 67,84 66,89 C77,86 89,85 99,86 Z",
+      mid:"M99,86 C89,85 77,86 66,89 C65,94 64,99 65,103 C76,103 88,104 99,105 Z",
+      lower:"M99,105 C88,104 76,103 65,103 L65,106 C72,116 86,120 99,116 Z"},
+    biceps:{
+      long:"M48,108 C45,120 45,130 46,137 C48,138 50,138 52,137 C51,126 52,116 53,108 Z",
+      short:"M53,108 C52,116 51,126 52,137 C55,138 58,138 60,138 C61,128 61,116 58,108 Z",
+      brachialis:"M46,137 C46,142 47,145 49,148 C53,150 58,148 60,140 L60,138 C57,139 50,139 46,137 Z"},
+    forearms:{brachioradialis:FORE_OUT, flexors:FORE_IN},
     upperAbs:"M99,120 L87,120 C86,134 86,148 87,158 L99,158 Z",
     lowerAbs:"M99,161 L87,161 C87,178 89,194 96,210 L99,212 Z",
     obliques:"M68,122 C70,146 72,166 74,184 C76,192 80,198 86,202 C84,180 83,150 84,120 Z",
-    quads:"M66,214 C62,240 63,272 70,300 C76,310 86,312 92,304 C93,284 92,258 90,236 C84,224 76,216 66,214 Z",
-    adductors:"M98,224 C93,234 91,252 92,278 C95,264 98,248 99,232 Z",
-    calves:"M73,322 C71,342 73,368 78,392 L86,392 C89,368 91,344 89,322 Z"
+    quads:{
+      vl:"M66,214 C62,240 63,272 70,300 C72,303 74,305 77,306 C75,290 74,262 76,236 C76,228 72,218 66,214 Z",
+      rf:"M66,214 C72,218 76,228 76,236 C74,262 75,284 78,294 C82,288 86,282 90,274 C92,262 91,248 90,236 C84,224 76,216 66,214 Z",
+      vm:"M78,294 C77,298 77,302 77,306 C80,310 86,312 92,304 C93,294 92,284 90,274 C86,282 82,288 78,294 Z"},
+    adductors:{
+      longus:"M98,224 C95,230 93,238 92.5,248 C95,246 97,243 99,240 L99,232 Z",
+      gracilis:"M92.5,248 C92,258 92,268 92,278 C95,264 98,252 99,240 C97,243 95,246 92.5,248 Z"},
+    calves:{
+      tib:"M73,322 C71,342 73,368 78,392 L81,392 C80,368 79,344 81,322 Z",
+      soleus:"M81,322 C79,344 80,368 81,392 L86,392 C89,368 91,344 89,322 Z"}
   },
   back:{
-    traps:"M100,50 L92,52 L91,62 C84,66 74,69 66,72 C76,78 86,86 92,104 C95,116 97,126 100,134 Z",
-    delts:DELT,
-    triceps:"M47,104 C45,120 45,138 49,150 C53,152 58,150 60,142 C62,128 61,114 58,106 Z",
-    forearms:FORE,
-    lats:"M70,104 C68,124 71,146 79,164 C85,174 90,178 93,180 L93,150 C90,130 86,114 82,100 Z",
+    traps:{
+      upper:"M100,50 L92,52 L91,62 C84,66 74,69 66,72 L70,74 L100,78 Z",
+      middle:"M100,78 L70,74 C78,79 87,88 91,100 L100,100 Z",
+      lower:"M100,100 L91,100 C95,112 97,124 100,134 Z"},
+    delts:{side:DELT_OUT, rear:DELT_IN},
+    triceps:{
+      lateral:"M47,104 C45,116 45,128 46,136 C48,136 51,135 53,134 C53,124 53,112 52,104 Z",
+      long:"M52,104 C53,112 53,124 53,134 C56,135 58,136 60,137 C61,126 61,114 58,106 Z",
+      medial:"M46,136 C46,142 47,147 49,150 C53,152 58,150 60,142 L60,137 C58,136 56,135 53,134 C51,135 48,136 46,136 Z"},
+    forearms:{brachioradialis:FORE_OUT, extensors:FORE_IN},
+    lats:{
+      teres:"M60,99 C66,96 75,96 82,99 L83,103 C76,104 68,106 61,108 C60,105 60,102 60,99 Z",
+      lat:"M69,108 C76,106 80,105 83,104 C86,116 90,132 93,150 L93,180 C90,178 85,174 79,164 C71,146 68,126 69,108 Z"},
     lowerBack:"M99,136 C95,142 93,150 92,164 C91,180 92,194 95,202 L99,204 Z",
-    glutes:"M99,206 C90,201 76,201 68,210 C63,222 64,238 70,246 C80,254 92,252 99,246 Z",
-    hamstrings:"M68,252 C65,272 67,292 73,306 C80,310 88,310 93,304 C96,284 97,266 97,254 C88,258 76,258 68,252 Z",
-    calves:"M73,318 C67,334 68,354 74,370 C79,378 86,378 90,370 C94,354 94,334 90,318 C84,314 78,314 73,318 Z"
+    glutes:{
+      med:"M93,198 C86,193 74,193 68,198 C65,205 65,214 66,224 C70,214 80,207 93,205 Z",
+      max:"M99,208 C97,206 95,205 93,205 C80,207 70,214 66,224 C64,232 66,240 70,246 C80,254 92,252 99,246 Z",
+      min:"M86,197.5 C80,196.5 73,198.5 70,202.5 C70,205.5 72,206.5 75,204.5 C78,201.5 82,200.5 87,200.5 Z"},
+    hamstrings:{
+      bf:"M68,252 C65,272 67,292 73,306 C75,308 77,309 80,309 C79,290 79,272 81,257 C76,256 72,254 68,252 Z",
+      st:"M81,257 C79,272 79,290 80,309 C84,309 87,308 89,306 C90,290 91,272 90,258 C87,258 84,258 81,257 Z",
+      sm:"M90,258 C91,272 90,290 89,306 L92,305 C94,290 95,272 94,257 C93,258 91,258 90,258 Z"},
+    adductors:{magnus:"M94,257 C95,272 94,290 92,305 C95,298 97,282 98,268 C99,262 99,254 99,249 C97,252 95,255 94,257 Z"},
+    calves:{
+      gastro:"M73,318 C68,332 69,348 73,358 C77,357 80,354 82,347 C84,354 87,357 91,358 C94,346 94,330 90,318 C84,314 78,314 73,318 Z",
+      soleus:"M73,358 C77,357 80,354 82,347 C84,354 87,357 91,358 C91,362 90,366 90,370 C86,378 79,378 74,370 C73,366 73,362 73,358 Z"}
   }
 };
 
@@ -254,6 +297,9 @@ const EN_UI = {
  lvl:["","Beginner","Intermediate","Advanced"], int:["","Low","Moderate","High"], intensity:"Intensity",
  what:"What it does", why:"Why train it", nEx:n=>`${n} exercises`,
  legend:"Intensity = how hard the exercise is on your whole body and how much rest it needs.",
+ whole:"Whole group", inGroup:"Muscles in this group", focus:"How to target it",
+ primary:"Main target", secondary:"Also works it", deep:"Deep muscle · lies under the surface muscles, drawn dashed",
+ nExFor:n=>`${n} exercises for this muscle`,
  rx:"Prescription", how:"How to do it", cues:"Form cues", miss:"Common mistakes", watch:"Watch form videos", view:"view", and:" & ",
  footer:"General education, not medical advice. Start light, learn the movement before adding load, and see a professional if something hurts. Video buttons open a YouTube search for form demonstrations."
 };
@@ -262,49 +308,66 @@ try { lang = localStorage.getItem("ma-lang") || (/^hr\b/i.test(navigator.languag
 const U = () => lang==="hr" ? HR.ui : EN_UI;
 const gT = id => { const g = G[id], h = lang==="hr" && HR.groups[id]; return h ? {...g, ...h} : g; };
 const xT = x => { const h = lang==="hr" && HR.ex[x.n]; return h ? {...x, ...h, en:x.n} : {...x, en:x.n}; };
+const partOf = (id,p) => p && PARTS[id] && PARTS[id].find(m => m.id===p);
+const pT = (id,p) => { const m = partOf(id,p); return m && (lang==="hr" ? {...m, ...m.hr} : m); };
+const nameOf = (id,p) => p ? pT(id,p).name : gT(id).name;
 
 const REGIONS = ["Upper body","Core","Lower body"];
-const viewsOf = id => ["front","back"].filter(v => SHAPES[v][id]);
+// views a group (or one of its muscles) appears on
+const viewsOf = (id,p) => ["front","back"].filter(v => { const s = SHAPES[v][id]; return s && (!p || (typeof s==="object" && s[p])); });
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const EX_BY_NAME = {};
+for (const id in G) for (const x of G[id].ex) EX_BY_NAME[x.n] = x;
 
 // ---------- Render figures ----------
 const mir = d => `<path d="${d}"/><path d="${d}" transform="matrix(-1 0 0 1 200 0)"/>`;
 function drawFig(view){
-  let s = `<g class="sil"><ellipse cx="100" cy="30" rx="16" ry="20"/>${mir(SIL)}</g>`;
-  for (const [id,d] of Object.entries(SHAPES[view])) s += `<g class="m" data-id="${id}" tabindex="0" role="button">${mir(d)}</g>`;
-  document.getElementById(view).innerHTML = s;
+  let s = `<g class="sil"><ellipse cx="100" cy="30" rx="16" ry="20"/>${mir(SIL)}</g>`, deep = "";
+  for (const [id,d] of Object.entries(SHAPES[view])){
+    if (typeof d==="string"){ s += `<g class="m" data-id="${id}" tabindex="0" role="button">${mir(d)}</g>`; continue; }
+    for (const [p,pd] of Object.entries(d)){
+      const isDeep = partOf(id,p).deep;
+      const g = `<g class="m${isDeep?" deep":""}" data-id="${id}" data-part="${p}" tabindex="0" role="button">${mir(pd)}</g>`;
+      if (isDeep) deep += g; else s += g;   // deep muscles drawn last so they stay clickable
+    }
+  }
+  document.getElementById(view).innerHTML = s + deep;
 }
 drawFig("front"); drawFig("back");
 
 // ---------- Interaction ----------
 const hoverRead = document.getElementById("hoverRead");
-let current = null;
-const restRead = () => current ? `${U().selected} <b>${esc(gT(current).name)}</b>` : U().hover;
-function highlight(id,on){
-  document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.toggle("hl",on));
-  hoverRead.innerHTML = on ? `<b>${esc(gT(id).name)}</b> · ${viewsOf(id).map(v=>U()[v]).join(" + ")}` : restRead();
+let current = null, currentPart = null;
+const sel = (id,p) => `[data-id="${id}"]` + (p ? `[data-part="${p}"]` : "");
+const restRead = () => current ? `${U().selected} <b>${esc(nameOf(current,currentPart))}</b>` : U().hover;
+function highlight(id,p,on){
+  document.querySelectorAll(sel(id,p)).forEach(el => el.classList.toggle("hl",on));
+  hoverRead.innerHTML = on
+    ? `<b>${esc(nameOf(id,p))}</b>${p ? ` · ${esc(gT(id).name)}` : ""} · ${viewsOf(id,p).map(v=>U()[v]).join(" + ")}`
+    : restRead();
 }
-document.addEventListener("mouseover", e => { const t = e.target.closest("[data-id]"); if (t) highlight(t.dataset.id,true); });
-document.addEventListener("mouseout", e => { const t = e.target.closest("[data-id]"); if (t) highlight(t.dataset.id,false); });
+const target = e => e.target.closest && e.target.closest("[data-id]");
+document.addEventListener("mouseover", e => { const t = target(e); if (t) highlight(t.dataset.id,t.dataset.part,true); });
+document.addEventListener("mouseout", e => { const t = target(e); if (t) highlight(t.dataset.id,t.dataset.part,false); });
 document.addEventListener("click", e => {
   const l = e.target.closest("[data-lang]"); if (l) return setLang(l.dataset.lang);
-  const t = e.target.closest("[data-id]"); if (t) select(t.dataset.id,true);
+  const t = target(e); if (t) select(t.dataset.id,t.dataset.part||null,!t.closest(".sheet"));
 });
 document.addEventListener("keydown", e => {
   const t = e.target.closest && e.target.closest(".m");
-  if (t && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); select(t.dataset.id,true); }
+  if (t && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); select(t.dataset.id,t.dataset.part||null,true); }
 });
 
 const meter = n => `<span class="meter" aria-hidden="true">${[1,2,3].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</span>`;
 const yt = n => "https://www.youtube.com/results?search_query=" + encodeURIComponent(n + " exercise proper form");
 
-function exHTML(raw,i){
+function exHTML(raw,i,extra){
   const x = xT(raw), u = U();
   return `<details class="ex" data-ex="${esc(x.en)}"${i===0?" open":""}>
   <summary>
     <span class="ex-name">${esc(x.n)}</span>
     <span class="intensity">${u.intensity} ${meter(x.int)} ${u.int[x.int]}</span>
-    <span class="tags"><span class="tag">${esc(x.eq)}</span><span class="tag lvl-${x.lvl}">${u.lvl[x.lvl]}</span></span>
+    <span class="tags">${extra||""}<span class="tag">${esc(x.eq)}</span><span class="tag lvl-${x.lvl}">${u.lvl[x.lvl]}</span></span>
   </summary>
   <div class="ex-body">
     <p>${esc(x.what)}</p>
@@ -330,33 +393,60 @@ function renderChrome(){
   document.getElementById("back").setAttribute("aria-label", u.figBack);
   document.getElementById("footer").textContent = u.footer;
   document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang===lang));
-  document.querySelectorAll(".m").forEach(el => el.setAttribute("aria-label", gT(el.dataset.id).name));
+  document.querySelectorAll(".m").forEach(el => el.setAttribute("aria-label", nameOf(el.dataset.id,el.dataset.part)));
   document.getElementById("groups").innerHTML = REGIONS.map(r => `<div><p class="grp-title">${u.regions[r]}</p><div class="chips">${
     Object.keys(G).filter(id => G[id].region===r).map(id =>
       `<button class="chip" data-id="${id}" aria-pressed="${id===current}">${esc(gT(id).name)}</button>`).join("")
   }</div></div>`).join("");
 }
 
-function select(id,scroll){
-  current = id;
-  const g = gT(id), u = U();
-  document.querySelectorAll(".m").forEach(el => el.classList.toggle("sel", el.dataset.id===id));
-  document.querySelectorAll(".chip").forEach(el => el.setAttribute("aria-pressed", el.dataset.id===id));
+function partsHTML(id){
+  if (!PARTS[id]) return "";
+  const u = U();
+  return `<div class="parts"><p class="grp-title">${u.inGroup}</p><div class="chips">
+    <button class="chip" data-id="${id}" aria-pressed="${!currentPart}">${u.whole}</button>${
+    PARTS[id].map(m => `<button class="chip" data-id="${id}" data-part="${m.id}" aria-pressed="${m.id===currentPart}">${esc(pT(id,m.id).short)}</button>`).join("")
+  }</div></div>`;
+}
+
+function select(id,part,scroll){
+  if (!partOf(id,part)) part = null;
+  current = id; currentPart = part;
+  const g = gT(id), m = pT(id,part), u = U();
+  document.querySelectorAll(".m").forEach(el => {
+    const mine = el.dataset.id===id, hit = mine && (!part || el.dataset.part===part);
+    el.classList.toggle("sel", hit);
+    el.classList.toggle("grp", mine && !hit);
+  });
+  document.querySelectorAll("#groups .chip").forEach(el => el.setAttribute("aria-pressed", el.dataset.id===id));
   hoverRead.innerHTML = restRead();
+
+  let head, intro, list;
+  if (m){
+    const sc = m.ex;
+    const exs = Object.keys(sc).filter(n => sc[n]>=2 && EX_BY_NAME[n]).sort((a,b) => sc[b]-sc[a]);
+    head = `<p class="eyebrow">${esc(g.name)} · ${viewsOf(id,part).map(v=>u[v]).join(u.and)} ${u.view}</p>
+    <h2>${esc(m.name)}</h2><p class="latin">${esc(m.latin)}</p>${m.deep?`<p class="deep-note">${u.deep}</p>`:""}`;
+    intro = `<div><h3>${u.what}</h3><p>${esc(m.fn)}</p></div><div><h3>${u.focus}</h3><p>${esc(m.focus)}</p></div>`;
+    list = `<div class="ex-head"><h3>${u.nExFor(exs.length)}</h3><p class="legend">${u.legend}</p></div>
+    <div class="exlist">${exs.map((n,i) => exHTML(EX_BY_NAME[n],i,
+      sc[n]===3 ? `<span class="tag t-main">${u.primary}</span>` : `<span class="tag t-also">${u.secondary}</span>`)).join("")}</div>`;
+  } else {
+    // whole group: tag each exercise with the muscles it mainly targets
+    const mainFor = n => (PARTS[id]||[]).filter(p => p.ex[n]===3).map(p => `<span class="tag t-part">${esc(pT(id,p.id).short)}</span>`).join("");
+    head = `<p class="eyebrow">${u.regions[g.region]} · ${viewsOf(id).map(v=>u[v]).join(u.and)} ${u.view}</p>
+    <h2>${esc(g.name)}</h2><p class="latin">${esc(g.latin)}</p>`;
+    intro = `<div><h3>${u.what}</h3><p>${esc(g.fn)}</p></div><div><h3>${u.why}</h3><ul class="why">${g.why.map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>`;
+    list = `<div class="ex-head"><h3>${u.nEx(g.ex.length)}</h3><p class="legend">${u.legend}</p></div>
+    <div class="exlist">${G[id].ex.map((x,i) => exHTML(x,i,mainFor(x.n))).join("")}</div>`;
+  }
   document.getElementById("sheet").innerHTML = `
-  <div>
-    <p class="eyebrow">${u.regions[g.region]} · ${viewsOf(id).map(v=>u[v]).join(u.and)} ${u.view}</p>
-    <h2>${esc(g.name)}</h2>
-    <p class="latin">${esc(g.latin)}</p>
-  </div>
-  <div class="intro">
-    <div><h3>${u.what}</h3><p>${esc(g.fn)}</p></div>
-    <div><h3>${u.why}</h3><ul class="why">${g.why.map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>
-  </div>
+  <div>${head}</div>
+  ${partsHTML(id)}
+  <div class="intro">${intro}</div>
   ${g.note?`<p class="note">${esc(g.note)}</p>`:""}
-  <div class="ex-head"><h3>${u.nEx(g.ex.length)}</h3><p class="legend">${u.legend}</p></div>
-  <div class="exlist">${G[id].ex.map(exHTML).join("")}</div>`;
-  try { history.replaceState(null,"","#"+id); } catch(e){}
+  ${list}`;
+  try { history.replaceState(null,"","#"+id+(part?"/"+part:"")); } catch(e){}
   if (scroll && window.matchMedia("(max-width:860px)").matches){
     document.getElementById("sheet").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth", block:"start"});
   }
@@ -365,14 +455,14 @@ function select(id,scroll){
 function setLang(l){
   lang = l;
   try { localStorage.setItem("ma-lang", l); } catch(e){}
-  renderChrome(); select(current,false);
+  renderChrome(); select(current,currentPart,false);
   if (window.onLang) window.onLang();
 }
 
 window.START_HASH = location.hash;
-const start = (location.hash||"").slice(1);
-current = G[start] ? start : "chest";
-renderChrome(); select(current,false);
+const [startId, startPart] = (location.hash||"").slice(1).split("/");
+current = G[startId] ? startId : "chest";
+renderChrome(); select(current,startPart||null,false);
 </script>
 <script src="plan.js"></script>
 
